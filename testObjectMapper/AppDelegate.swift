@@ -44,21 +44,23 @@ public class User: Mappable {
     }
 }
 
-class Hi: Mappable {
+class Hi: BaseMuateMappable {
     var hello: String?
     var zero: Int?
     var foo: String?
     
-    required init?(map: Map){
-        if map.JSON["hello"] == nil {
-            return nil
-        }
-    }
-    
-    func mapping(map: Map) {
+    override func mapping(map: Map) {
         hello <- map["hello"]
         zero <- map["zero"]
         foo <- map["foo"]
+    }
+}
+
+class BaseMuateMappable: Mappable {
+    required init?(map: Map) {
+        
+    }
+     func mapping(map: Map) {
     }
 }
 
@@ -108,10 +110,6 @@ class BasicTypes: HandyJSON {
     required init() {}
 }
 
-
-
-
-
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
@@ -132,7 +130,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 //        testRxObject()
 //        testHandyJson()
         //testMapRxObject()
-        testNormal()
+        //testNormal()
+        testNormalArray()
         return true
     }
     
@@ -140,7 +139,33 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         //http://rap2api.taobao.org/app/mock/25784/example/1533804054000
         
     }
-
+    func testNormalArray() {
+        //result.toJSON()
+        
+        let DataJSONContent = "{\"status\":200,\"message\":\"success\",\"data\":[{\"hello\":null, \"foo\":\"bar\", \"zero\": 0},{\"hello\":null, \"foo\":\"bar\", \"zero\": 0}]}"
+        
+        let DataJSON = DataJSONContent.data(using: String.Encoding.utf8)!
+        stub(condition: isHost("wwx.xxcocco.com")) { _ in
+            return OHHTTPStubsResponse(data: DataJSON, statusCode:200, headers:nil)
+        }
+        
+        NetworkingHelpers.netSignal(t: Hi.self, url: "http://wwx.xxcocco.com", parameters: [:]).subscribe(onNext:{ result in
+            print(result.count)
+            print(result[0])
+            //print(result.foo)
+        },onError:{ reuslt in
+            print(reuslt)
+        })
+        
+        //        testNormalRx(t: Hi.self).subscribe(onNext:{ result in
+        //            //print(result.hello)
+        //            print(result)
+        //            print(result.foo)
+        //        },onError:{ reuslt in
+        //            print(reuslt)
+        //        })
+        
+    }
     func testNormal() {
         //result.toJSON()
         
@@ -151,14 +176,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             return OHHTTPStubsResponse(data: DataJSON, statusCode:200, headers:nil)
         }
         
-        testNormalRx(t: Hi.self).subscribe(onNext:{ result in
+        NetworkingHelpers.netSignal(t: Hi.self, url: "http://wwx.xxcocco.com").subscribe(onNext:{ result in
             //print(result.hello)
             print(result)
             print(result.foo)
         },onError:{ reuslt in
             print(reuslt)
         })
+
+//        testNormalRx(t: Hi.self).subscribe(onNext:{ result in
+//            //print(result.hello)
+//            print(result)
+//            print(result.foo)
+//        },onError:{ reuslt in
+//            print(reuslt)
+//        })
         
+    }
+    
+    func testNoParaRx<T: Mappable>() -> Observable<T> {
+        return testNormalRx(t:T.self)
     }
     
     func testNormalRx<T: Mappable>(t:T.Type)-> Observable<T> {
@@ -167,21 +204,27 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return Observable.create { observer in
             let Url = "http://wwx.xxcocco.com"
             let request = Alamofire.request(Url, method: .get).responseData { (response) in
-                 DispatchQueue.global(qos: .default).async {
-                let json = try! JSON(data: response.data!)
-                if  json["status"].int != 200 {
-                    //Now you got your value
-                    let testError = NSError(domain: "status not 200", code: -1, userInfo: nil)
-                    observer.on(.error(testError))
+                if response.error == nil {
+                DispatchQueue.global(qos: .default).async {
+                    let json = try! JSON(data: response.data!)
+                    if  json["status"].int != 200 {
+                        //Now you got your value
+                        let testError = NSError(domain: "status not 200", code: -1, userInfo: nil)
+                        observer.on(.error(testError))
+                    }
+                    else {
+                        let dict = json["data"].dictionaryObject
+                        let re =  Mapper<T>().map(JSON:dict!)
+                        observer.on(.next(re!))
+                        observer.on(.completed)
+                    }
                 }
-                else {
-                     let dict = json["data"].dictionaryObject
-                     let re =  Mapper<T>().map(JSON:dict!)
-                    observer.on(.next(re!))
-                    observer.on(.completed)
-                  }
+                } else {
+                    observer.on(.error(response.error!))
+                    //网络异常,请稍后再试
+                    //服务异常，请稍后再试
                 }
-                }
+            }
             return Disposables.create {request.cancel()}
             }.subscribeOn(ConcurrentDispatchQueueScheduler(qos: .default))
                 
