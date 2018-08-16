@@ -46,22 +46,37 @@ public class User: Mappable {
 
 class Hi: BaseMuateMappable {
     var hello: String?
-    var zero: Int?
+    var zero: Int = -99
     var foo: String?
     
     override func mapping(map: Map) {
+        super.mapping(map: map)
         hello <- map["hello"]
         zero <- map["zero"]
         foo <- map["foo"]
     }
+    
+//   override func setHasModel() {
+//        hasModel = (foo != nil )
+//    }
 }
 
-class BaseMuateMappable: Mappable {
-    required init?(map: Map) {
-        
+public class BaseMuateMappable: Mappable {
+    //var hasModel = true
+    
+    required public init?(map: Map) {
+        if map.JSON["hello"] == nil {
+            return nil
+        }
     }
-     func mapping(map: Map) {
+
+    public func mapping(map: Map) {
+        //hasModel <- map["hasModel"]
     }
+    
+//    public func setHasModel() {
+//
+//    }
 }
 
 //let jsonString = "{\"status\":200,\"message\":\"success\",\"data\":{\"hello\":null, \"f2oo\":\"b2ar\", \"z2ero\": 0}}"
@@ -130,9 +145,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 //        testRxObject()
 //        testHandyJson()
         //testMapRxObject()
-        //testNormal()
+        testNormal()
+        //mapObjectMapper()
         testNormalArray()
         return true
+    }
+    
+    func mapObjectMapper() {
+        let JSONString = "{\"value\":\"value0\"}"
+        
+        let parsedObject = Mapper<Hi>().map(JSONString: JSONString)
+        
+        print(parsedObject==nil)
+        
+        
+        let jsonString = "{\"doub2leOptional2\":1.1,\"stringI2mplicitlyUnwrapped2\":\"hello2\",\"int2\":1}"
+        //let jsonString = "{}" //如果是""解析对象就是nil,如是{},不管有无类属性，返回默认值的解析对象
+        
+        let d = BasicTypes.deserialize(from: jsonString)
+        print(d==nil)
+        
     }
     
     func testRap2() {
@@ -142,16 +174,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func testNormalArray() {
         //result.toJSON()
         
-        let DataJSONContent = "{\"status\":200,\"message\":\"success\",\"data\":[{\"hello\":null, \"foo\":\"bar\", \"zero\": 0},{\"hello\":null, \"foo\":\"bar\", \"zero\": 0}]}"
+        //返回数据是Array
+        //let DataJSONContent = "{\"status\":200,\"message\":\"success\",\"data\":[{\"hello\":null, \"foo\":\"bar\", \"zero\": 0},{\"hello\":null, \"foo\":\"bar\", \"zero\": 0}]}" //
+        //Array无数据返回格式
+        let DataJSONContent = "{\"status\":200,\"message\":\"success\",\"data\":[]}" //返回对应的实例，count为0
+        //let DataJSONContent = "{\"status\":200,\"message\":\"success\"}" //返回对应的实例，count为0
         
         let DataJSON = DataJSONContent.data(using: String.Encoding.utf8)!
         stub(condition: isHost("wwx.xxcocco.com")) { _ in
             return OHHTTPStubsResponse(data: DataJSON, statusCode:200, headers:nil)
         }
         
-        NetworkingHelpers.netSignal(t: Hi.self, url: "http://wwx.xxcocco.com", parameters: [:]).subscribe(onNext:{ result in
-            print(result.count)
-            print(result[0])
+        NetworkingHelpers.arrayModelSignal(t: Hi.self, url: "http://wwx.xxcocco.com", parameters: [:]).subscribe(onNext:{ result in
+            print("array:\(result)")
+            for r in result {
+                print("array: r.foo \(r.foo)")
+            }
+            print(result.count == 0)
+            //Optional([])
+            //Optional(0)
+            //print(result[0].foo)
             //print(result.foo)
         },onError:{ reuslt in
             print(reuslt)
@@ -168,18 +210,23 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     func testNormal() {
         //result.toJSON()
-        
-        let DataJSONContent = "{\"status\":200,\"message\":\"success\",\"data\":{\"hello\":null, \"foo\":\"bar\", \"zero\": 0}}"
+        //403 token  303
+        //返回对象
+        //let DataJSONContent = "{\"status\":200,\"message\":\"success\",\"data\":{\"hello\":null, \"foo\":\"bar\", \"zero\": 0}}"
+        let DataJSONContent = "{\"status\":200,\"message\":\"success\",\"data\":{\"hxello2\":null, \"fxoo2\":\"bar\", \"zxero2\": 0}}"
+        //对象为空返回此staa
+        //let DataJSONContent = "{\"status\":200,\"message\":\"success\",\"data\":{}}" //返回对应的实例，都是默认值
+        //let DataJSONContent = "{\"status\":200,\"message\":\"success\"}" //dict!["data"]
         
         let DataJSON = DataJSONContent.data(using: String.Encoding.utf8)!
         stub(condition: isHost("wwx.xxcocco.com")) { _ in
             return OHHTTPStubsResponse(data: DataJSON, statusCode:200, headers:nil)
         }
         
-        NetworkingHelpers.netSignal(t: Hi.self, url: "http://wwx.xxcocco.com").subscribe(onNext:{ result in
+        NetworkingHelpers.modelSignal(t: Hi.self, url: "http://wwx.xxcocco.com").subscribe(onNext:{ result in
             //print(result.hello)
-            print(result)
-            print(result.foo)
+            print("model:\(result)")
+            print("model:\(result?.foo)")
         },onError:{ reuslt in
             print(reuslt)
         })
