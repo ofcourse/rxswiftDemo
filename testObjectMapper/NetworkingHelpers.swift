@@ -19,11 +19,11 @@ typealias ErrorClosure =  (_ error: NSError) -> Void
 
 public class NetworkingHelpers {
     
-    public static func modelSignal<T: BaseMuateMappable>(t:T.Type, url:String)-> Observable<T?> {
+    public static func modelSignal<T: Mappable>(t:T.Type, url:String)-> Observable<T?> {
         return  modelSignal(t: t, url: url,parameters:[:])
     }
     
-    public static func modelSignal<T: BaseMuateMappable>(t:T.Type, url:String,parameters: Parameters)-> Observable<T?> {
+    public static func modelSignal<T: Mappable>(t:T.Type, url:String,parameters: Parameters)-> Observable<T?> {
         
         return Observable.create { observer in
                 let request = netRequestHelper(url: url, parameters: parameters, success: { (response) in
@@ -32,7 +32,7 @@ public class NetworkingHelpers {
                         observer.on(.next(nil))
                     } else {
                         let result = Mapper<T>().map(JSONObject:data)
-                        observer.on(.next(result!))
+                        observer.on(.next(result))
                     }
                     observer.on(.completed)
                 }, error: { (dataError) in
@@ -42,16 +42,16 @@ public class NetworkingHelpers {
             }.subscribeOn(ConcurrentDispatchQueueScheduler(qos: .default))
     }
     
-    public static func netArraySignal<T: Mappable>(t:T.Type, url:String)-> Observable<[T]> {
+    public static func arrayModelSignal<T: Mappable>(t:T.Type, url:String)-> Observable<[T]> {
         return  arrayModelSignal(t: t, url: url,parameters:[:])
     }
     
     public static func arrayModelSignal<T: Mappable>(t:T.Type, url:String,parameters: Parameters)-> Observable<[T]> {
         return Observable.create { observer in
-                let request = netRequestHelper(url: url, parameters: parameters, success: { (response) in
+                let request = netRequestHelper(isArray:true, url: url, parameters: parameters, success: { (response) in
                     let data = response["data"].object
                     let result = Mapper<T>().mapArray(JSONObject:data)
-                    observer.on(.next(result!))
+                    observer.on(.next(result ?? []))
                     observer.on(.completed)
                 }, error: { (dataError) in
                     observer.on(.error(dataError))
@@ -60,13 +60,13 @@ public class NetworkingHelpers {
             }.subscribeOn(ConcurrentDispatchQueueScheduler(qos: .default))
     }
     
-    private static func netRequestHelper(url:String,parameters: Parameters,success:@escaping ValidSuccessClosure,error:@escaping ErrorClosure) -> DataRequest {
+    private static func netRequestHelper(isArray: Bool = false ,url:String,parameters: Parameters,success:@escaping ValidSuccessClosure,error:@escaping ErrorClosure) -> DataRequest {
         let headers: HTTPHeaders = ["Accept": "application/json"]
         return Alamofire.request(url, method: .post, parameters:parameters, headers:headers).responseData(queue:DispatchQueue.global(qos: .default)) { (response) in
             if response.error == nil {
                 let dict = try? JSON(data: response.data!)
                 if dict != nil {
-                    if isValidResponse(dict!) {
+                    if isValidResponse(dict!,isArray: isArray) {
                         success(dict!)
                     } else {
                         if isValidErrorResponse(dict!) {
@@ -102,18 +102,26 @@ public class NetworkingHelpers {
         return true
     }
     
-  public  static func isValidResponse(_ dict: JSON) -> Bool {
+    public  static func isValidResponse(_ dict: JSON,isArray: Bool = false) -> Bool {
         if  dict["status"].int != 200 {
             return false
         }
-        
+    
         if  dict["message"].string == nil {
             return false
         }
-        
-    if dict["data"].dictionaryObject == nil && dict["data"].arrayObject == nil && (dict["data"].dictionaryObject?.keys.count)! > 0 {
-            return false
+        if isArray {
+            return isValidArrayResponse(dict)
+        } else {
+            return isValidModleResponse(dict)
         }
-        return true
+    }
+    
+    public static func isValidModleResponse(_ dict: JSON) -> Bool {
+        return dict["data"].dictionaryObject != nil
+    }
+    
+    public static func isValidArrayResponse(_ dict: JSON) -> Bool {
+         return dict["data"].arrayObject != nil
     }
 }

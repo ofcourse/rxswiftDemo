@@ -44,40 +44,26 @@ public class User: Mappable {
     }
 }
 
-class Hi: BaseMuateMappable {
+public class Hi: Mappable {
     var hello: String?
     var zero: Int = -99
     var foo: String?
     
-    override func mapping(map: Map) {
-        super.mapping(map: map)
-        hello <- map["hello"]
-        zero <- map["zero"]
-        foo <- map["foo"]
-    }
-    
-//   override func setHasModel() {
-//        hasModel = (foo != nil )
-//    }
-}
-
-public class BaseMuateMappable: Mappable {
-    //var hasModel = true
     
     required public init?(map: Map) {
         if map.JSON["hello"] == nil {
             return nil
         }
     }
-
-    public func mapping(map: Map) {
-        //hasModel <- map["hasModel"]
-    }
     
-//    public func setHasModel() {
-//
-//    }
+    public func mapping(map: Map) {
+        hello <- map["hello"]
+        zero <- map["zero"]
+        foo <- map["foo"]
+    }
+
 }
+
 
 //let jsonString = "{\"status\":200,\"message\":\"success\",\"data\":{\"hello\":null, \"f2oo\":\"b2ar\", \"z2ero\": 0}}"
 class MapResopnseHI: BassResponseMap {
@@ -145,7 +131,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 //        testRxObject()
 //        testHandyJson()
         //testMapRxObject()
-        testNormal()
+        //testNormal()
         //mapObjectMapper()
         testNormalArray()
         return true
