@@ -17,6 +17,7 @@ target 'testObjectMapper' do
   pod 'OHHTTPStubs/Swift', '~> 6.1.0'
   pod 'HandyJSON', '~> 4.1.1'
   pod 'SwiftyJSON', '~> 4.1.0'
+  pod 'SVProgressHUD', '~> 2.2.5'
   
   target 'testObjectMapperTests' do
     inherit! :search_paths

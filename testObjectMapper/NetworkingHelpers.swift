@@ -13,9 +13,12 @@ import SwiftyJSON
 import ObjectMapper
 import Alamofire
 import RxSwift
+import SVProgressHUD
 
 typealias ValidSuccessClosure = (_ data: JSON) -> Void
 typealias ErrorClosure =  (_ error: NSError) -> Void
+
+let networkingTokenIsInvalid = "networkingTokenIsInvalid"
 
 public class NetworkingHelpers {
     
@@ -69,7 +72,13 @@ public class NetworkingHelpers {
                     if isValidResponse(dict!,isArray: isArray) {
                         success(dict!)
                     } else {
-                        if isValidErrorResponse(dict!) {
+                        if isTokenNotValid(dict!) {
+                            let statusError = NSError(domain: "token is lost", code: 3, userInfo: dict!.dictionaryObject)
+                            error(statusError)
+                            //post notifaction toast 会话过期，然后自动退到登录界面
+                            //NotificationCenter.default.post(name: NSNotification.Name(rawValue: networkingTokenIsInvalid), object: nil)
+                            logOut()
+                        } else if isValidErrorResponse(dict!) {
                             let statusError = NSError(domain: "status not 200", code: 2, userInfo: dict!.dictionaryObject)
                             error(statusError)
                         } else {
@@ -88,11 +97,26 @@ public class NetworkingHelpers {
                 error(response.error! as NSError)
             }
         }
+  }
+    
+    public static func logOut() {
+        DispatchQueue.main.async {
+            SVProgressHUD.setDefaultMaskType(.black)
+            SVProgressHUD.setImageViewSize(CGSize.init(width: 0, height: 0))
+            SVProgressHUD.showError(withStatus:"current session is out ot date, please login again")
+            let loginViewController = UIStoryboard.init(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "NavLoginViewControllerSID")
+            let del = UIApplication.shared.delegate as! AppDelegate
+            del.window?.rootViewController = loginViewController
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                SVProgressHUD.dismiss()
+            }
+        }
     }
+    
     
     //token过期要特殊处理 status = 304?
   public  static func isValidErrorResponse(_ dict: JSON) -> Bool {
-        if  dict["status"].int != 200 {
+        if  dict["status"].int != 200   {
             return false
         }
         
@@ -100,6 +124,10 @@ public class NetworkingHelpers {
             return false
         }
         return true
+    }
+    
+   public  static  func isTokenNotValid (_ dict: JSON) -> Bool {
+        return dict["status"].int == 304
     }
     
     public  static func isValidResponse(_ dict: JSON,isArray: Bool = false) -> Bool {

@@ -10,7 +10,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "testObjectMapper/AppDelegate.swift"
-            timestampString = "556094557.304353"
+            timestampString = "556101550.192791"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "152"
@@ -25,13 +25,13 @@
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "testObjectMapper/AppDelegate.swift"
-            timestampString = "556094557.30442"
+            filePath = "testObjectMapper/NetworkingHelpers.swift"
+            timestampString = "556101550.194615"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "214"
-            endingLineNumber = "214"
-            landmarkName = "testNormal()"
+            startingLineNumber = "130"
+            endingLineNumber = "130"
+            landmarkName = "isTokenNotValid(_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -41,13 +41,29 @@
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "testObjectMapper/AppDelegate.swift"
-            timestampString = "556094557.304471"
+            filePath = "testObjectMapper/ViewController.swift"
+            timestampString = "556101550.195002"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "217"
-            endingLineNumber = "217"
-            landmarkName = "testNormal()"
+            startingLineNumber = "40"
+            endingLineNumber = "40"
+            landmarkName = "testTokenLost(_:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "testObjectMapper/ViewController.swift"
+            timestampString = "556101550.195428"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "42"
+            endingLineNumber = "42"
+            landmarkName = "testTokenLost(_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
